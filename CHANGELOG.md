@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — 0.2.0.dev0
+
+- Add optional Matplotlib figure builders for finite-volume spectra,
+  coupled-channel amplitude strengths, root diagnostics, local pole maps and
+  covariance diagnostics. A reproducible `plot-demo` command writes synthetic
+  results, PNGs and SVGs without claiming paper-data reproduction.
+
 ## 0.1.0 — initial research release
 
 - Public two-body JLS finite-volume matrices, kinematics, symmetry projections,

@@ -12,6 +12,7 @@ The public package is `lattice_scattering`; there is no parallel versioned imple
 | `finite_volume` | Zeta and box matrices, JLS assembly, and root scans |
 | `fitting` | Correlated level fits, matching, systematics, and replicas |
 | `data` | Replica data structures |
+| `plotting`, `plot_results` | Optional figure builders and saved-result renderer; mock gallery calculations live in `mock_plots` |
 
 The forward path is: masses and frame → common JLS sector pairs → amplitude-specific reduced-inverse total-J blocks → irrep-row projection → finite-volume determinant → laboratory-frame roots. The `lattice-scattering` CLI supports constant reduced-inverse blocks, registered channel-basis S-wave models and correlated S-wave fits, registry discovery, and spectrum JSON validation. The registry-model adapter explicitly refuses non-S-wave sectors; spinful/higher-wave models, matrix checks, systematics, and replicas remain Python API workflows.
 

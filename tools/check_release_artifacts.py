@@ -14,6 +14,7 @@ PUBLIC_DOCS = {
     "inverse-models.md",
     "left-hand-cut-domain.md",
     "pipi-chiral-api.md",
+    "plotting.md",
     "release-scope.md",
     "releasing.md",
     "resonance-models.md",
