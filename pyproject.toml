@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Finite-volume lattice scattering, amplitude analysis, and spectrum fitting"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["numpy", "scipy"]
+dependencies = ["numpy>=1.26,<3", "scipy>=1.11,<2"]
 authors = [{name = "Si-Yang Chen"}]
 license = {file = "LICENSE"}
 classifiers = [

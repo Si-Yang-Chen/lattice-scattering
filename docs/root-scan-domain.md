@@ -22,6 +22,9 @@ free pole, so a small one-sided numerical band around each free pole remains
 excluded. A root inside that band is not guaranteed to be resolved. The
 scanner no longer skips non-finite cells or falls back to a bisection that can
 return no root after encountering a failed evaluation.
+Box assembly checks its Hermitian defect relative to the largest matrix entry
+and removes roundoff below `1e-10` of that scale. A larger defect still raises
+an error. This comparison remains meaningful when entries grow near a free pole.
 
 The default `root_method="eigenvalues"` follows the ordered eigenvalues of the
 Hermitian row matrix. Ordered eigenvalues remain continuous at degeneracies;

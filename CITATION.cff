@@ -6,5 +6,6 @@ authors:
   - family-names: Chen
     given-names: Si-Yang
 version: 0.1.0
+date-released: 2026-09-25
 repository-code: https://github.com/Si-Yang-Chen/lattice-scattering
 license: MIT
