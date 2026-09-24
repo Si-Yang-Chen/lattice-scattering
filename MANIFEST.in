@@ -1,0 +1,8 @@
+include LICENSE CHANGELOG.md CITATION.cff CONTRIBUTING.md
+include docs/architecture.md docs/conventions.md docs/inverse-models.md
+include docs/left-hand-cut-domain.md docs/pipi-chiral-api.md
+include docs/release-scope.md docs/resonance-models.md docs/root-scan-domain.md
+include docs/selective-j.md docs/usage.md docs/verification.md
+include docs/releasing.md
+recursive-include examples *.py *.json
+prune developer

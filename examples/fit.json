@@ -1,0 +1,35 @@
+{
+  "schema": "lattice-scattering-fit/v1",
+  "amplitude": {
+    "model": "pole-polynomial-k",
+    "parameters": {
+      "mass": 0.8,
+      "couplings": [0.3],
+      "coefficients": [[[-0.4]]]
+    },
+    "phase_space": "simple"
+  },
+  "fit_parameters": [
+    {"path": "/couplings/0", "initial": 0.25, "bounds": [0.1, 0.5]}
+  ],
+  "conditions": [
+    {
+      "id": "rest-A1g",
+      "frame": {"spatial_sites": 24, "anisotropy": 1.0, "d": [0, 0, 0]},
+      "channel_masses_at": [[0.3, 0.3]],
+      "energy_window_at": [0.61, 0.95],
+      "irrep": "A1g",
+      "row": 0,
+      "samples": 60,
+      "levels": [
+        {"id": "level-1", "energy_at": 0.7621805850198052},
+        {"id": "level-2", "energy_at": 0.8392112781359998}
+      ]
+    }
+  ],
+  "matching_tolerance": 0.05,
+  "covariance": [
+    [1.0e-6, 2.0e-7],
+    [2.0e-7, 1.0e-6]
+  ]
+}

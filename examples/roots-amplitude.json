@@ -1,0 +1,23 @@
+{
+  "schema": "lattice-scattering-roots/v1",
+  "frame": {"spatial_sites": 24, "anisotropy": 1.0, "d": [0, 0, 0]},
+  "channel_masses_at": [[0.3, 0.3]],
+  "sectors": [[0, 0]],
+  "irrep": "A1g",
+  "row": 0,
+  "weighting": "threshold",
+  "energy_window_at": [0.61, 0.95],
+  "samples": 60,
+  "amplitude": {
+    "model": "chiral-ere-pcotdelta",
+    "parameters": {
+      "scattering_length": 1.0,
+      "effective_range": 0.1,
+      "pion_mass": 0.3,
+      "heavy_mass": 0.3,
+      "mass1": 0.3,
+      "mass2": 0.3
+    },
+    "phase_space": "simple"
+  }
+}

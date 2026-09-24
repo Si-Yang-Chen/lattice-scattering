@@ -1,0 +1,25 @@
+# Conventions and limits
+
+## Units and geometry
+
+`energy_lab_at`, hadron masses, and momenta use temporal-lattice units. `LatticeFrame.anisotropy = a_s/a_t`, so `LatticeFrame.length_at = spatial_sites × anisotropy`. Root outputs are laboratory-frame energies `a_t E_lab`; J-block callbacks receive center-of-mass squared energy `s_at2`. `breakpoints_at2` are also values of `s_at2`.
+
+For every channel and every energy in a proposed scan window, the derived `q²`, boost `gamma`, and shift `alpha` must stay in the Zeta implementation's domain. Its guards are harmonic degree `0..12`, `|d|² ≤ 36`, real `q² ∈ [-48,4]`, `gamma ∈ [1,1.52]`, `alpha ∈ [0,1]`, and split parameter `0.5..2`; a rest frame requires `gamma = 1`. Mixed box entries require `ell + ell' ≤ 12`. Use `two_body_point(...)` and `row_matrix(...)` at representative window energies to preflight a new setup. The root scanner raises `RootScanError` on failed matrix/domain evaluation, nonfinite determinants, or failed bracket refinement; the exception is a `ValueError` with the failing energy/cause when available. An explicit strict free-pole policy propagates `FreePoleError`. Successful finite sampling does not certify root completeness.
+
+## JLS and amplitude conventions
+
+The default finite-volume JLS API accepts one ordered list of `(ell, twice_S)` pairs shared by every channel. The optional `channel_sectors` supplies an ordered list per channel instead; pass `sectors=None` in that case. Block entries are ordered channel first and then by participating sector. By default all `twice_J` values admitted by the triangle rule must be supplied. With `selected_j_sectors`, only explicitly selected channel/sector incidences participate; each amplitude block must exactly match that active layout. Couplings must preserve total parity: intrinsic parity product times orbital parity. The common-parity default therefore forbids opposite orbital parity coupling. `core.enumerate_sectors` returns richer objects for bookkeeping; convert to common pairs before calling the forward kernel.
+
+`intrinsic_parity` is the common product of the two particle parities; `channel_intrinsic_parities` supplies a product per channel when needed. Half-integer spin requires a double-cover little group; the CLI builds it automatically. A printed irrep name must be checked against this package's representation, dimension, row, and parity. `row` is zero-based irrep row, not level number or multiplicity.
+
+`weighting="scale"` and `weighting="threshold"` require differently normalized reduced-inverse blocks. Changing the flag without transforming `R^J(s)` changes the physics. The package does not infer a source's `K`, hatted `K`, `p cot(delta)`, phase-space subtraction, or unit mapping. Explicit selective-J inputs restrict the quantization matrix to the active irrep-row subspace. This does not validate the physical truncation choice for a paper.
+
+## Roots and fits
+
+The scanner splits at free poles and caller-provided `breakpoints_at2`, then follows ordered Hermitian eigenvalues, refining sign brackets and sampled extrema. Every default-path root passes a scale-aware matrix residual check. Narrow unresolved structures and free-pole exclusion bands still limit completeness. The optional historical determinant path has no automatic residual gate. See [root scan controls and limits](root-scan-domain.md) and [left-hand-cut diagnostics](left-hand-cut-domain.md).
+
+`match_levels` performs a global one-to-one assignment, maximizing eligible matches before minimizing its matching cost; inspect unmatched levels and roots. `JointFitProblem` uses grouped one-to-one matching when every observation has an explicit, non-null `Observation.group`; each group's predictor is called once and must return its complete shared candidate root list. Different labels denote independent quantization groups, so equal-energy roots may be used once in each group. Group labels must reflect the full physical condition, not just a convenient display name. Groups are never inferred from frame, irrep, or row metadata.
+
+If `JointFitProblem` observations have no group labels, or only some have labels, construction raises an ambiguity error unless a strategy was supplied. To intentionally select roots per observation, set `matching_strategy="nearest"` or provide a callable and leave every group label unset; these explicitly selected strategies can reuse roots. Partially supplied labels remain invalid, and a complete declared group cannot be combined with a per-observation strategy because that would bypass its one-to-one constraint. Matching cost is not the full correlated chi-squared; after a fit, inspect assignment and root stability before making a physics claim. Full covariance rows and columns must follow the observation order.
+
+Spectrum units must be `temporal_lattice`. An omitted JSON field uses that default; explicit null or other declarations are rejected. The parser does not convert values or prove their actual physical units. Supply and independently check temporal-lattice values before using the spectrum in a calculation.

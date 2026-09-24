@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, cite this software release and its repository."
+title: "lattice-scattering"
+type: software
+authors:
+  - family-names: Chen
+    given-names: Si-Yang
+version: 0.1.0
+repository-code: https://github.com/Si-Yang-Chen/lattice-scattering
+license: MIT

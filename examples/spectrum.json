@@ -1,0 +1,58 @@
+{
+  "schema": "coupled-spectrum/v2",
+  "units": "temporal_lattice",
+  "ensembles": [
+    {
+      "id": "E1",
+      "xi": 1.0,
+      "xi_unc": 0.0,
+      "mass_covariance": null
+    }
+  ],
+  "hadrons": [
+    {
+      "label": "phi",
+      "twice_spin": 0,
+      "parity": -1,
+      "mass_at": 0.3,
+      "mass_unc_at": 0.0,
+      "ensemble": null
+    }
+  ],
+  "channels": [
+    {
+      "label": "phi-phi",
+      "a": "phi",
+      "b": "phi",
+      "exchange": "identical"
+    }
+  ],
+  "frames": [
+    {
+      "id": "L24_d000",
+      "spatial_sites": 24,
+      "anisotropy": 1.0,
+      "d": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "irrep_map": {},
+  "levels": [
+    {
+      "id": "level-1",
+      "frame": "L24_d000",
+      "irrep": "A1g",
+      "row": 0,
+      "energy_at": 0.8,
+      "energy_unc_at": 0.01
+    }
+  ],
+  "covariance": [
+    [
+      0.0001
+    ]
+  ]
+}
