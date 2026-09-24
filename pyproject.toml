@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lattice-scattering"
-version = "0.1.0"
+version = "0.2.0.dev0"
 description = "Finite-volume lattice scattering, amplitude analysis, and spectrum fitting"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,7 +28,8 @@ Documentation = "https://github.com/Si-Yang-Chen/lattice-scattering/tree/main/do
 Issues = "https://github.com/Si-Yang-Chen/lattice-scattering/issues"
 
 [project.optional-dependencies]
-test = ["pytest"]
+plot = ["matplotlib>=3.7,<4"]
+test = ["pytest", "matplotlib>=3.7,<4"]
 
 [project.scripts]
 lattice-scattering = "lattice_scattering.__main__:main"

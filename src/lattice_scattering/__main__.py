@@ -161,6 +161,11 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("models", help="list registered amplitude models")
     spectrum_parser = commands.add_parser("validate-spectrum", help="validate a coupled-spectrum/v2 JSON file")
     spectrum_parser.add_argument("path", type=Path)
+    plot_parser = commands.add_parser("plot-demo", help="calculate synthetic two-channel results and save figures")
+    plot_parser.add_argument("output_dir", type=Path)
+    results_parser = commands.add_parser("plot-results", help="render figures from declared calculation-result JSON")
+    results_parser.add_argument("results_json", type=Path)
+    results_parser.add_argument("output_dir", type=Path)
     args = parser.parse_args(argv)
     try:
         if args.command == "roots":
@@ -169,6 +174,14 @@ def main(argv: list[str] | None = None) -> int:
             result = run_correlated_fit(load_config(args.config))
         elif args.command == "models":
             result = model_listing()
+        elif args.command == "plot-demo":
+            from .mock_plots import generate_mock_plots
+
+            result = generate_mock_plots(args.output_dir)
+        elif args.command == "plot-results":
+            from .plot_results import render_plot_results
+
+            result = render_plot_results(args.results_json, args.output_dir)
         else:
             spectrum = load_spectrum(args.path)
             result = {"schema": "lattice-scattering-validation/v1", "valid": True,

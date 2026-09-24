@@ -3,8 +3,9 @@
 `lattice-scattering` is a Python package for two-body finite-volume lattice
 scattering. It provides spectrum data models, kinematics, symmetry projections,
 amplitude models, JLS quantization matrices, root searches, correlated fits, and
-replica analysis. The current release is **0.1.0**, an initial research software
-release with a defined numerical and physical domain.
+replica analysis. The latest tagged release is **0.1.0**; this development
+checkout is **0.2.0.dev0** and adds optional plotting. Both have defined
+numerical and physical domains.
 
 The package starts from extracted spectra or scattering observables. It does not
 generate lattice gauge configurations or correlation functions. Its synthetic
@@ -46,6 +47,24 @@ fit inputs. The [root-search guide](docs/root-scan-domain.md) and
 and checks. Amplitude model details are in [inverse models](docs/inverse-models.md),
 [resonance models](docs/resonance-models.md), and
 [pi-pi chiral API](docs/pipi-chiral-api.md).
+
+## Plot calculated results
+
+Install the optional plotting dependency and generate five figures from a
+reproducible two-channel toy calculation:
+
+```sh
+python -m pip install -e ".[plot]"
+python -m lattice_scattering plot-demo examples/mock_plots
+python -m lattice_scattering plot-results examples/mock_plots/mock-results.json examples/replotted
+```
+
+The figures and `mock-results.json` are explicitly synthetic. `plot-results`
+renders saved calculation arrays without rerunning the physics. See the
+[plotting guide](docs/plotting.md) for their numerical inputs, output formats,
+and the reusable figure-building functions.
+
+![Synthetic two-channel finite-volume spectrum](examples/mock_plots/spectrum.png)
 
 ## Verify and cite
 
