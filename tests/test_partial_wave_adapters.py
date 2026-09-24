@@ -1,17 +1,6 @@
-"""Independent tests for the explicit-incidence 2102 partial-wave adapter."""
+"""Independent tests for the explicit-incidence partial-wave adapter."""
 
 from __future__ import annotations
-
-from functools import lru_cache
-import io
-import json
-import os
-from pathlib import Path
-from pathlib import PurePosixPath
-import subprocess
-import sys
-import tarfile
-import tempfile
 
 import numpy as np
 import pytest
@@ -54,158 +43,27 @@ def _source_inverse_from_phase(ell, k, ecm, delta):
     return (2.0 * k) ** (2 * ell) * khat_inverse
 
 
-def _validate_historical_archive_members(members):
-    """Allow only safe members under the pinned ``src/lattice_scattering`` tree."""
-    package = ("src", "lattice_scattering")
-    ancestors = {("src",), package}
-    for member in members:
-        name = member.name
-        if not isinstance(name, str) or not name or "\\" in name:
-            raise AssertionError(f"unexpected path in pinned historical source archive: {name!r}")
-        member_path = PurePosixPath(name)
-        parts = member_path.parts
-        if (
-            member_path.is_absolute()
-            or ".." in parts
-            or member_path.as_posix().rstrip("/") != name.rstrip("/")
-        ):
-            raise AssertionError(f"unexpected path in pinned historical source archive: {name}")
-        if parts in ancestors:
-            allowed_type = member.isdir()
-        elif parts[:2] == package:
-            allowed_type = member.isfile() or member.isdir()
-        else:
-            allowed_type = False
-        if not allowed_type:
-            raise AssertionError(f"unexpected path in pinned historical source archive: {name}")
-
-
-@lru_cache(maxsize=1)
-def _historical_coupled_axial_source_tree():
-    """Extract the pinned historical package for isolated test subprocesses."""
-    repository = Path(__file__).resolve().parents[2] / "lattice-scattering-software"
-    revision = "5c562e3aace00ea74444b89abe65de6b0297c027"
-    source_path = "src/lattice_scattering/finite_volume/coupled_axial.py"
-    expected_blob = "cd5513b09bfc210c92e60d316386ba4484e59085"
-    actual_blob = subprocess.run(
-        ["git", "-C", str(repository), "rev-parse", f"{revision}:{source_path}"],
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    ).stdout.strip()
-    if actual_blob != expected_blob:
-        raise AssertionError(
-            f"historical coupled_axial source blob changed: expected {expected_blob}, got {actual_blob}"
-        )
-    archive = subprocess.run(
-        [
-            "git",
-            "-C",
-            str(repository),
-            "archive",
-            "--format=tar",
-            revision,
-            "src/lattice_scattering",
-        ],
-        check=True,
-        capture_output=True,
-    ).stdout
-    temporary = tempfile.TemporaryDirectory(prefix="wave-adapter-historical-")
-    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as source_archive:
-        members = source_archive.getmembers()
-        _validate_historical_archive_members(members)
-        source_archive.extractall(temporary.name, members=members)
-    return temporary, Path(temporary.name) / "src"
-
-
 def _historical_quantization_matrix(energy, s_inverse, p_reduced_inverse, masses, frame):
-    """Call the pinned 5c562e3 kernel in an isolated Python process."""
-    temporary, source_root = _historical_coupled_axial_source_tree()
-    payload = {
-        "energy": float(energy),
-        "s_inverse": float(s_inverse),
-        "p_reduced_inverse": np.asarray(p_reduced_inverse, dtype=float).tolist(),
-        "masses": [list(pair) for pair in masses],
-        "spatial_sites": int(frame.spatial_sites),
-        "anisotropy": float(frame.anisotropy),
-        "d": list(frame.d),
-    }
-    runner = r"""
-import json
-import sys
-import numpy as np
-from lattice_scattering.kinematics import LatticeFrame
-from lattice_scattering.finite_volume.coupled_axial import quantization_matrix
+    """Frozen two-point oracle from historical revision 5c562e3, blob cd5513b.
 
-class _InverseModel:
-    def __init__(self, value):
-        self.value = float(value)
-    def inverse(self, _s):
-        return np.array([[self.value]])
-
-data = json.loads(sys.argv[1])
-frame = LatticeFrame(data["spatial_sites"], data["anisotropy"], tuple(data["d"]))
-matrix = quantization_matrix(
-    data["energy"],
-    _InverseModel(data["s_inverse"]),
-    np.asarray(data["p_reduced_inverse"], dtype=float),
-    data["masses"],
-    frame,
-)
-print(json.dumps(np.asarray(matrix).real.tolist()))
-"""
-    environment = os.environ.copy()
-    inherited_pythonpath = environment.get("PYTHONPATH")
-    environment["PYTHONPATH"] = os.pathsep.join(
-        part for part in (str(source_root), inherited_pythonpath) if part
-    )
-    result = subprocess.run(
-        [sys.executable, "-c", runner, json.dumps(payload)],
-        check=True,
-        capture_output=True,
-        text=True,
-        cwd=temporary.name,
-        env=environment,
-    )
-    return np.asarray(json.loads(result.stdout), dtype=float)
-
-
-def _archive_member(name, member_type):
-    member = tarfile.TarInfo(name)
-    member.type = member_type
-    return member
-
-
-def test_historical_archive_validator_accepts_git_archive_package_ancestors():
-    _validate_historical_archive_members(
-        [
-            _archive_member("src", tarfile.DIRTYPE),
-            _archive_member("src/lattice_scattering", tarfile.DIRTYPE),
-            _archive_member("src/lattice_scattering/amplitudes", tarfile.DIRTYPE),
-            _archive_member("src/lattice_scattering/__init__.py", tarfile.REGTYPE),
-        ]
-    )
-
-
-@pytest.mark.parametrize(
-    ("name", "member_type"),
-    [
-        ("../outside.py", tarfile.REGTYPE),
-        ("src/../outside.py", tarfile.REGTYPE),
-        ("/src/lattice_scattering/outside.py", tarfile.REGTYPE),
-        ("src/lattice_scattering_extra/module.py", tarfile.REGTYPE),
-        ("src/other.py", tarfile.REGTYPE),
-        (r"src\..\outside.py", tarfile.REGTYPE),
-        ("src", tarfile.REGTYPE),
-        ("src/lattice_scattering/link", tarfile.SYMTYPE),
-    ],
-)
-def test_historical_archive_validator_rejects_unsafe_or_out_of_package_members(
-    name, member_type
-):
-    with pytest.raises(AssertionError, match="unexpected path"):
-        _validate_historical_archive_members([_archive_member(name, member_type)])
+    The source is retained in the private archive; public tests carry only its
+    independently generated numeric outputs and check that the inputs match.
+    """
+    np.testing.assert_allclose(energy, 1.1, atol=0, rtol=0)
+    assert tuple(map(tuple, masses)) == (SPINLESS_DPI_MASSES[0],)
+    assert frame.spatial_sites == 16 and frame.anisotropy == 1.0 and frame.d == (0, 0, 1)
+    np.testing.assert_allclose(p_reduced_inverse, [[0.05453349389290879]], atol=1e-14, rtol=0)
+    if np.isclose(s_inverse, 1.6888584331008085, atol=1e-14, rtol=0):
+        return np.array([
+            [2.0126056030985016, 0.0736049770299773],
+            [0.0736049770299773, 1.1263511897580432],
+        ])
+    if np.isclose(s_inverse, 1.0, atol=1e-14, rtol=0):
+        return np.array([
+            [1.1113907477418818, 0.0736049770299773],
+            [0.0736049770299773, 1.1263511897580432],
+        ])
+    raise AssertionError("input differs from the frozen historical oracle")
 
 
 def _one_wave(ell, *, phase_space="simple", subtraction_point=None, model=None):

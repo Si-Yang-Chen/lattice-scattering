@@ -18,7 +18,7 @@ Two entry points:
 
 Generalisation over the legacy kernels: ``d`` is arbitrary (the wide-domain v2
 :func:`~lattice_scattering.finite_volume.zeta.harmonic_zeta_wide` is used) and
-the orbital degrees may reach ``MAX_ELL`` (8).  Only the algebraically shared
+the orbital degrees may reach ``MAX_ELL`` (12).  Only the algebraically shared
 kernel ``symmetry.harmonic_products.conjugate_product_coefficients`` is imported
 at runtime, as allowed by the v2 interface contract.
 
@@ -126,6 +126,23 @@ def _settings_key(settings: dict) -> tuple[tuple[str, object], ...]:
     return tuple(items)
 
 
+def _checked_hermitian(matrix: np.ndarray, description: str) -> np.ndarray:
+    """Enforce exact Hermiticity after a scale-aware roundoff check.
+
+    Near a free pole individual entries can be O(1e8), while symmetry-zero
+    entries remain near zero. An elementwise absolute comparison mistakes
+    machine-scale cancellation in those entries for a physical asymmetry.
+    """
+    adjoint = matrix.conj().T
+    scale = max(1.0, float(np.max(np.abs(matrix))))
+    defect = float(np.max(np.abs(matrix - adjoint)))
+    if not np.isfinite(scale) or not np.isfinite(defect) or defect > 1e-10 * scale:
+        raise ArithmeticError(
+            f"non-Hermitian {description}: defect={defect:.3e}, scale={scale:.3e}"
+        )
+    return 0.5 * matrix + 0.5 * adjoint
+
+
 def orbital_box(q2, ells, *, d, gamma, alpha, **settings) -> np.ndarray:
     """Orbital box matrix, ``sum(2*ell+1)`` dimensional, ``m`` ascending.
 
@@ -177,12 +194,10 @@ def orbital_box(q2, ells, *, d, gamma, alpha, **settings) -> np.ndarray:
                 "ijk,k->ij", coefficients, weights
             )
     result *= np.sqrt(4 * np.pi) / (gamma * np.pi**1.5)
-    if not np.allclose(result, result.conj().T, atol=1e-10, rtol=1e-12):
-        raise ArithmeticError(
-            "non-Hermitian orbital box for "
-            f"ell={waves}, d={tuple(d)}, q2={q2}, gamma={gamma}, alpha={alpha}"
-        )
-    return result
+    return _checked_hermitian(
+        result,
+        f"orbital box for ell={waves}, d={tuple(d)}, q2={q2}, gamma={gamma}, alpha={alpha}",
+    )
 
 
 def mixed_box(q2, sectors, *, d, gamma, alpha, max_dimension: int = 256, **settings) -> np.ndarray:
@@ -207,9 +222,7 @@ def mixed_box(q2, sectors, *, d, gamma, alpha, max_dimension: int = 256, **setti
                 result[offsets[i] : offsets[i + 1], offsets[k] : offsets[k + 1]] = np.kron(
                     orbital[local[a] : local[a + 1], local[b] : local[b + 1]], np.eye(spin + 1)
                 )
-    if not np.allclose(result, result.conj().T, atol=1e-10, rtol=1e-12):
-        raise ArithmeticError(
-            "non-Hermitian mixed box for "
-            f"sectors={pairs}, d={tuple(d)}, q2={q2}, gamma={gamma}, alpha={alpha}"
-        )
-    return result
+    return _checked_hermitian(
+        result,
+        f"mixed box for sectors={pairs}, d={tuple(d)}, q2={q2}, gamma={gamma}, alpha={alpha}",
+    )
